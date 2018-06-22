@@ -1,0 +1,103 @@
+---
+title: "Scared no more:"
+subtitle: "A beginner guide to make Milton ![](img/Milton.png) your friendly collaborator"
+author: "Anna Quaglieri"
+date: "2018/06/22"
+output:
+  xaringan::moon_reader:
+    css: ['default.css','MUG-fonts.css']
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    
+---
+
+```{r initial, echo = FALSE, cache = FALSE, results = 'hide'}
+library(knitr)
+library(icon)
+options(htmltools.dir.version = FALSE, tibble.width = 80, tibble.print_min = 6)
+opts_chunk$set(
+  echo = TRUE, warning = FALSE, message = FALSE, comment = "#>",
+  fig.path = 'figure/', cache.path = 'cache/', fig.align = 'center', 
+  fig.show = 'hold', 
+  cache = TRUE, dev = 'svglite'
+)
+```
+
+
+## Two most common types of workflows in `r emo::ji("man_technologist")`  Bioinformatics `r emo::ji("woman_technologist")`:
+
+<br>
+
+* **Interactive Sessions**: We need to run code and see interactively what’s happening (plots, model results etc...). For example, by using the terminal or `r icon::fa_r_project()` Studio.
+ 
+* **Serial/Pipeline jobs** `r emo::ji("repeat")`: We need to perform the same series of steps (alignment,remove adapters, sort,mark duplicated, etc...) for tens of samples and we care only about the final result.
+
+---
+
+## Today's talk ![](img/Milton.png)
+
+<br>
+<br>
+
+* A few comments about **Interactive Sessions**
+ 
+* Why did I start using **Milton**? 
+ 
+* How I use it
+
+
+---
+
+
+## Options to run Interactive Sessions
+
+### From your local `r icon::fa_r_project()` Studio
+
+`r emo::ji("+1")` I can update `r icon::fa_r_project()` `r emo::ji("package")` and version when I need to <br>
+<br>
+`r emo::ji("+1")` I can access files `r emo::ji("file_cabinet")` on the server and on my local `r emo::ji("computer")` 
+<br>
+
+```{r}
+# Beginning of every script
+# TRUE if running from local, FALSE if running from the server
+local <- TRUE
+mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
+                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+
+```
+
+`r emo::ji("-1")` Slow `r emo::ji("turtle")` or even does not work with very large files
+
+---
+
+<br>
+<br>
+
+### `r icon::fa_r_project()` Studio on Unix or Milton
+
+
+* http://unix401/auth-sign-in / http://unix309/auth-sign-in /  http://unix308/auth-sign-in
+ 
+* I have never ran it using Milton but it is possible!
+ 
+`r emo::ji("+1")` Faster `r emo::ji("zap")` than running from local `r icon::fa_r_project()` Studio! <br>
+<br>
+`r emo::ji("+1")` Cannot access directly files `r emo::ji("file_cabinet")` on my local `r emo::ji("computer")` <br>
+
+
+
+---
+
+<br>
+<br>
+
+### `ssh unix500`
+
+* Best of both worlds `r emo::ji("clinking_glasses")`: hybrid between `torquelord` and the well known `unix` computers
+ 
+* You can run analyses directly from it like a normal unix terminal, you can open screen sessions and you can also submit jobs on torquelord with `qsub`
+
+

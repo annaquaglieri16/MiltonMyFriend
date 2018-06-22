@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Scared no more:</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Anna Quaglieri" />
+    <link href="MiltonMyFriend_files/font-awesome/css/fontawesome-all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="default.css" type="text/css" />
+    <link rel="stylesheet" href="MUG-fonts.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Scared no more:
+## A beginner guide to make Milton <img src="img/Milton.png" /> your friendly collaborator
+### Anna Quaglieri
+### 2018/06/22
+
+---
+
+
+
+
+
+## Two most common types of workflows in 👨‍💻  Bioinformatics 👩‍💻:
+
+&lt;br&gt;
+
+* **Interactive Sessions**: We need to run code and see interactively what’s happening (plots, model results etc...). For example, by using the terminal or <i class="fab  fa-r-project "></i> Studio.
+ 
+* **Serial/Pipeline jobs** 🔁: We need to perform the same series of steps (alignment,remove adapters, sort,mark duplicated, etc...) for tens of samples and we care only about the final result.
+
+---
+
+## Today's talk ![](img/Milton.png)
+
+&lt;br&gt;
+&lt;br&gt;
+
+* A few comments about **Interactive Sessions**
+ 
+* Why did I start using **Milton**? 
+ 
+* How I use it
+
+
+---
+
+
+## Options to run Interactive Sessions
+
+### From your local <i class="fab  fa-r-project "></i> Studio
+
+👍 I can update <i class="fab  fa-r-project "></i> 📦 and version when I need to &lt;br&gt;
+&lt;br&gt;
+👍 I can access files 🗄 on the server and on my local 💻 
+&lt;br&gt;
+
+
+```r
+# Beginning of every script
+# TRUE if running from local, FALSE if running from the server
+local &lt;- TRUE
+mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
+                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+```
+
+👎 Slow 🐢 or even does not work with very large files
+
+---
+
+&lt;br&gt;
+&lt;br&gt;
+
+### <i class="fab  fa-r-project "></i> Studio on Unix or Milton
+
+
+* http://unix401/auth-sign-in / http://unix309/auth-sign-in /  http://unix308/auth-sign-in
+ 
+* I have never ran it using Milton but it is possible!
+ 
+👍 Faster ⚡ than running from local <i class="fab  fa-r-project "></i> Studio! &lt;br&gt;
+&lt;br&gt;
+👍 Cannot access directly files 🗄 on my local 💻 &lt;br&gt;
+
+
+
+---
+
+&lt;br&gt;
+&lt;br&gt;
+
+### `ssh unix500`
+
+* Best of both worlds 🥂: hybrid between `torquelord` and the well known `unix` computers
+ 
+* You can run analyses directly from it like a normal unix terminal, you can open screen sessions and you can also submit jobs on torquelord with `qsub`
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
