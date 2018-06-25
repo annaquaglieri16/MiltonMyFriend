@@ -42,13 +42,13 @@ class: center, middle, inverse, title-slide
  
 * Why did I start using **Milton**? 
  
-* How I use it
+* How I use **Milton**
 
 
 ---
 
 
-## Options to run Interactive Sessions
+## Interactive Sessions with <i class="fab  fa-r-project "></i>
 
 ### From your local <i class="fab  fa-r-project "></i> Studio
 
@@ -96,6 +96,140 @@ mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
 * Best of both worlds 🥂: hybrid between `torquelord` and the well known `unix` computers
  
 * You can run analyses directly from it like a normal unix terminal, you can open screen sessions and you can also submit jobs on torquelord with `qsub`
+
+* [Watch video](https://drive.google.com/file/d/1v3OmRfSk6NLZiIBB0ce74obP6aZsNxkm/view?usp=sharing)!
+
+
+---
+
+## Why did I start using Milton
+
+
+* I had to run the same pipeline over and over again across many samples
+* I got tired of opening tens of screen sessions on the unix machines to run jobs in "parallel"
+
+
+---
+
+### RNA-Seq pipeline: FASTQ files -&gt; Annotated variants
+
+Initial run for 46 RNA-Seq samples downloaded from GEO
+
+1. FASTQC on raw Fastq files 
+2. Alignment: `STAR` pass1 + `STAR` pass2
+3. Mark Duplicates + add Read Groups with `Picard Tools`
+5. Some QC: `ValidateSamFile`
+4. Gene counts with `featureCounts`
+5. Fusions with `STAR-Fusion`
+6. GATK pre-processing (very slow!)
+7. Call variants with four callers
+8. Annotate variants with `VEP`
+
+
+---
+
+Pipeline to be run: 
+
+
+```r
+(46 * 3) + (4 * (46 * 5))
+```
+
+```
+#&gt; [1] 1058
+```
+
+Times!
+
+![](img/RNADownsRuns.png)
+
+
+---
+
+## How to use Milton: Example aligning reads with `Subread`
+
+* We have to align 46 fastq files with `Subread::align()` in R
+* Let's suppose we have created the `Subread` index since that needs to be created once for all!
+
+
+```r
+local &lt;- TRUE
+mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
+                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+
+library(Rsubread)
+
+# Run Subread in the directory where the index is stored
+setwd(file.path(mydir,"genomes/Subread_index"))
+list.files()
+```
+
+```
+#&gt;  [1] "GRCh38_index.00.b.array" "GRCh38_index.00.b.tab"  
+#&gt;  [3] "GRCh38_index.01.b.array" "GRCh38_index.01.b.tab"  
+#&gt;  [5] "GRCh38_index.02.b.array" "GRCh38_index.02.b.tab"  
+#&gt;  [7] "GRCh38_index.files"      "GRCh38_index.log"       
+#&gt;  [9] "GRCh38_index.reads"      "hg19_index.00.b.array"  
+#&gt; [11] "hg19_index.00.b.tab"     "hg19_index.01.b.array"  
+#&gt; [13] "hg19_index.01.b.tab"     "hg19_index.02.b.array"  
+#&gt; [15] "hg19_index.02.b.tab"     "hg19_index.files"       
+#&gt; [17] "hg19_index.log"          "hg19_index.reads"
+```
+
+---
+
+### Run `Subread` on a terminal screen session
+
+* Start terminal screen session
+
+
+```bash
+ssh unix308
+screen
+module load R
+R
+```
+
+* Run `Subread`
+
+
+```r
+local &lt;- FALSE
+mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
+                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+
+library(Rsubread)
+
+setwd(file.path(mydir,"genomes/Subread_index"))
+
+# Get FASTQ files name
+fastqdir &lt;- "/wehisan/general/user_managed/grpu_majewski_3/quaglieri.a/GEO_Leucegene_data/sra_cbf_aml/fastq_20M_100"
+reads1 &lt;- list.files(path = fastqdir,pattern = "R1.fastq.gz$")
+reads2 &lt;- gsub("R1","R2",reads1)
+
+# Align
+align(index="hg19_index",readfile1=reads1,readfile2=reads2,phredOffset=64,nthreads = 10)
+```
+
+
+---
+
+### `Subread` threading
+
+* `Subread` will align the fastq files one after the other one (like a `for` loop)
+
+* It applies multithreading when aligning the reads within every fastq file
+
+* Milton will help you to:
+
+  * **Align every fasq files at the same time**
+  
+  * Use `Subread` multithreading for every fastq file
+  
+
+---
+
+## Create
     </textarea>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
