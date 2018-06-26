@@ -3,18 +3,21 @@ Align fastq files with Subread on Milton
 Anna Quaglieri
 25/06/2018
 
+-   [Fastqc](#fastqc)
+-   [Submit the job/s to the queue: `qsub`](#submit-the-jobs-to-the-queue-qsub)
+    -   [Combine genomic analysis outputs: `multiqc`](#combine-genomic-analysis-outputs-multiqc)
+-   [Monitor your jobs while their running: `qstat`](#monitor-your-jobs-while-their-running-qstat)
+    -   [Access `std_err` and `std_out` of running jobs](#access-std_err-and-std_out-of-running-jobs)
+    -   [General way to find the folder where the `ER` and `OUT` go](#general-way-to-find-the-folder-where-the-er-and-out-go)
+-   [Check your job statistics after they had ran: `torquestats`](#check-your-job-statistics-after-they-had-ran-torquestats)
 -   [Create R scripts to run RSubread on Milton](#create-r-scripts-to-run-rsubread-on-milton)
     -   [One usual way: Run `Subread` on a terminal screen session](#one-usual-way-run-subread-on-a-terminal-screen-session)
         -   [`Subread` threading](#subread-threading)
     -   [The Milton way](#the-milton-way)
-        -   [Create the R scripts, one per sample](#create-the-r-scripts-one-per-sample)
+        -   [Create the `R` scripts, one per sample](#create-the-r-scripts-one-per-sample)
+        -   [How an example `_SubreadAlign.R` looks like\*\*](#how-an-example-_subreadalign.r-looks-like)
         -   [Create the bash `.sh` scripts, one per sample](#create-the-bash-.sh-scripts-one-per-sample)
         -   [How an example `.sh` script looks like](#how-an-example-.sh-script-looks-like)
--   [Submit the job/s to the queue: `qsub`](#submit-the-jobs-to-the-queue-qsub)
--   [Monitor your jobs while their running: `qstat`](#monitor-your-jobs-while-their-running-qstat)
-    -   [Access `std_err` and `std_out` of running jobs](#access-std_err-and-std_out-of-running-jobs)
-    -   [General way to find the folder where the `ER` and `OUT` go](#general-way-to-find-the-folder-where-the-er-and-out-go)
--   [4. Check your job statistics after they had ran: `torquestats`](#check-your-job-statistics-after-they-had-ran-torquestats)
 
 ``` bash
 
@@ -23,159 +26,52 @@ cd /home/users/allstaff/quaglieri.a/PHD_project/
 git clone git@github.com:annaquaglieri16/MiltonMyFriend.git
 ```
 
-Create R scripts to run RSubread on Milton
-==========================================
+Fastqc
+======
 
--   Subread needs to be run in the directory where the genome index was created
-
-``` r
-library(Rsubread)
-
-# Run Subread in the directory where the index is stored
-setwd(file.path(here(),"Subread_Example/Subread_index"))
-list.files()
-```
-
-    ## character(0)
-
-One usual way: Run `Subread` on a terminal screen session
----------------------------------------------------------
-
--   Start terminal screen session
+-   `for` loop
 
 ``` bash
 ssh unix308
 
-screen
+cd /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/example_bamfiles
 
-module load R
+# Option 1
+for fastq in *fastq.gz ; do 
 
-R
-```
-
--   `file.path(here(),"Subread_Example/Subread_index")` will give `/Volumes/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Subread_index` but since I need to access the files from the unix computer I need to substitute `Volumes` with `/home/users/allstaff/`
-
-``` r
-library(Rsubread)
-
-setwd(file.path("/home/users/allstaff/quaglieri.a/PHD_project","MiltonMyFriend/Subread_Example/Subread_index"))
-# Get FASTQ files name
-fastqdir <- file.path("/home/users/allstaff/quaglieri.a/PHD_project","MiltonMyFriend/Subread_Example/example_bamfiles")
-reads1 <- list.files(path = fastqdir,pattern = "R1.fastq.gz$",full.names = TRUE)
-reads2 <- gsub("R1","R2",reads1)
-
-# Align
-align(index="hg19_index",readfile1=reads1,readfile2=reads2,nthreads = 10)
-```
-
-### `Subread` threading
-
--   `Subread` will align the fastq files one after the other one (like a `for` loop)
-
--   It applies multithreading when aligning the reads within every fastq file
-
--   Milton will help you to:
-
--   **Align every fastq file at the same time**
-
--   Use `Subread` multithreading for every fastq file
-
-The Milton way
---------------
-
-### Create the R scripts, one per sample
-
-``` r
-repo_dir <- "/home/users/allstaff/quaglieri.a/PHD_project"
-
-library(Rsubread)
-
-setwd(file.path(repo_dir,"MiltonMyFriend/Subread_Example/Subread_index"))
-
-# Get FASTQ files name
-fastqdir <- file.path(repo_dir,"MiltonMyFriend/Subread_Example/example_bamfiles")
-reads1 <- list.files(path = fastqdir,pattern = "R1.fastq.gz$",full.names = TRUE)
-reads2 <- gsub("R1","R2",reads1)
-
-# Directory where to save the R scripts
-dir.create(file.path(repo_dir,"MiltonMyFriend/Subread_Example/Scripts_Subread"),recursive = TRUE,showWarnings = FALSE)
-script_directory <- file.path(repo_dir,"MiltonMyFriend/Subread_Example/Scripts_Subread")
-
-# Create scripts, one for every Sample
-for(read in 1:length(reads1)){
- 
-  read1 <- reads1[read] # get fastq file containing R1
-  read2 <- reads2[read] # get fastq file containing R1
-  sampleName <- basename(gsub("_R1.fastq.gz","",read1)) # extract sampleName
-  
-  scriptSample <- file.path(script_directory,paste0(sampleName,"_SubreadAlign.R")) # define script path for sampleName
-  
-  SubreadCall <- paste0("align(index='hg19_index',
-                        readfile1=","'",read1,"'",
-                        ",readfile2=","'",read2,"'",
-                        ",nthreads = 10,",
-                        "output_file=","'",file.path(dirname(scriptSample),paste0(sampleName,".bam")),"')")
-  
-  cat('library(Rsubread) \n\n',file = scriptSample)
-  
-  cat("setwd('/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Subread_index') \n\n",file = scriptSample,append = TRUE)
-  
-  cat(SubreadCall,file = scriptSample,append = TRUE)
-   
-}
-```
-
-**How `SRX381851_SubreadAlign.R` looks like**
-
-Other scripts will have the exact same structure but with a different file name.
-
-``` r
-library(Rsubread)
-
-setwd("/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Subread_index")
-
-align(index = "hg19_index", readfile1 = "/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/example_bamfiles/SRX381851_R1.fastq.gz", 
-    readfile2 = "/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/example_bamfiles/SRX381851_R2.fastq.gz", 
-    nthreads = 10, output_file = "/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Scripts_Subread/SRX381851.bam")
-```
-
-### Create the bash `.sh` scripts, one per sample
-
-Every `.R` scrips needs to be wrapped inside a bash `.sh` script to be queued.
-
-``` bash
-# variable assignment in bash
-scriptdir=/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Scripts_Subread
-
-for align_script in ${scriptdir}/*SubreadAlign.R ; do 
-
-  sampleName_tmp=$(basename ${align_script}) # same as basename() in R
-  sampleName=${sampleName_tmp/_SubreadAlign.R/} # same as gsub() in R
-  
-  echo '#!/bin/bash' > ${scriptdir}/${sampleName}_SubreadAlign.sh # echo same as cat() in R
-  echo '#PBS -l nodes=1:ppn=10,mem=32gb' >> ${scriptdir}/${sampleName}_SubreadAlign.sh # >> same as cat(append=TRUE)
-  echo '#PBS -l walltime=04:00:00' >> ${scriptdir}/${sampleName}_SubreadAlign.sh 
-  echo "#PBS -N ${sampleName}" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # Job Name
-  echo "#PBS -o ${scriptdir}/${sampleName}_out" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # std_out name
-  echo "#PBS -e ${scriptdir}/${sampleName}_err" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # std_err name
-  echo '' >> ${scriptdir}/${sampleName}_SubreadAlign.sh
-
-  echo $align_script >> ${scriptdir}/${sampleName}_SubreadAlign.sh
+fastqc $fastq
 
 done
 ```
 
-### How an example `.sh` script looks like
+-   Milton
 
 ``` bash
-#!/bin/bash
-#PBS -l nodes=1:ppn=10,mem=32gb
-#PBS -l walltime=04:00:00
-#PBS -N SRX381851
-#PBS -o /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Scripts_Subread/SRX381851_out
-#PBS -e /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Scripts_Subread/SRX381851_err
+ssh unix500
 
-/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Scripts_Subread/SRX381851_SubreadAlign.R
+fastqdir=/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/example_bamfiles
+scriptdir=${fastqdir}/fastqc_scripts
+
+mkdir -p $scriptdir # same as dir.create() in R
+
+for fastq in ${fastqdir}/*fastq.gz ; do 
+
+  sampleName_tmp=$(basename ${fastq}) # same as basename() in R
+  sampleName=${sampleName_tmp/.fastq.gz/} # same as gsub() in R
+  
+  echo '#!/bin/bash' > ${scriptdir}/${sampleName}_fastq.sh # echo same as cat() in R
+  echo '#PBS -l nodes=1:ppn=2,mem=4gb' >> ${scriptdir}/${sampleName}_fastq.sh # >> same as cat(append=TRUE)
+  echo '#PBS -l walltime=00:30:00' >> ${scriptdir}/${sampleName}_fastq.sh 
+  echo "#PBS -N ${sampleName}" >> ${scriptdir}/${sampleName}_fastq.sh # Job Name
+  echo "#PBS -o ${scriptdir}/${sampleName}_out" >> ${scriptdir}/${sampleName}_fastq.sh # std_out name
+  echo "#PBS -e ${scriptdir}/${sampleName}_err" >> ${scriptdir}/${sampleName}_fastq.sh # std_err name
+  echo '' >> ${scriptdir}/${sampleName}_fastq.sh
+
+  echo "module load fastqc" >> ${scriptdir}/${sampleName}_fastq.sh
+  echo '' >> ${scriptdir}/${sampleName}_fastq.sh
+  echo "fastqc $fastq" >> ${scriptdir}/${sampleName}_fastq.sh
+
+done
 ```
 
 Submit the job/s to the queue: `qsub`
@@ -184,10 +80,25 @@ Submit the job/s to the queue: `qsub`
 ``` bash
 ssh unix500
 
-cd /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Scripts_Subread
+cd /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/example_bamfiles/fastqc_scripts
 
-chmod 775 *
-qsub SRX729580_SubreadAlign.sh
+for fastq in *_fastq.sh ; do
+
+qsub $fastq
+
+done
+```
+
+Combine genomic analysis outputs: `multiqc`
+-------------------------------------------
+
+See <http://multiqc.info/>
+
+``` bash
+
+module load anaconda2/4.0.0
+
+multiqc . -n 'summary_fastqc'
 ```
 
 Monitor your jobs while their running: `qstat`
@@ -264,8 +175,8 @@ Example:
 ls -l /proc/45330/fd
 ```
 
-4. Check your job statistics after they had ran: `torquestats`
-==============================================================
+Check your job statistics after they had ran: `torquestats`
+===========================================================
 
 ``` bash
 ssh unix500
@@ -279,3 +190,167 @@ torquestats -u $USER -d 20180625 -p
 ```
 
 ![](img/torquestats.png)
+
+Create R scripts to run RSubread on Milton
+==========================================
+
+-   Subread needs to be run in the directory where the genome index was created
+
+``` r
+library(Rsubread)
+
+# Run Subread in the directory where the index is stored
+setwd(file.path("../GEO_Leucegene_data/genomes/Subread_index"))
+list.files()
+```
+
+    ##  [1] "GRCh38_index.00.b.array" "GRCh38_index.00.b.tab"  
+    ##  [3] "GRCh38_index.01.b.array" "GRCh38_index.01.b.tab"  
+    ##  [5] "GRCh38_index.02.b.array" "GRCh38_index.02.b.tab"  
+    ##  [7] "GRCh38_index.files"      "GRCh38_index.log"       
+    ##  [9] "GRCh38_index.reads"      "hg19_index.00.b.array"  
+    ## [11] "hg19_index.00.b.tab"     "hg19_index.01.b.array"  
+    ## [13] "hg19_index.01.b.tab"     "hg19_index.02.b.array"  
+    ## [15] "hg19_index.02.b.tab"     "hg19_index.files"       
+    ## [17] "hg19_index.log"          "hg19_index.reads"
+
+One usual way: Run `Subread` on a terminal screen session
+---------------------------------------------------------
+
+-   Start terminal screen session
+
+``` bash
+ssh unix308
+
+screen
+
+module load R
+
+R
+```
+
+-   `file.path(here(),"Subread_Example/Subread_index")` will give `/Volumes/quaglieri.a/PHD_project/MiltonMyFriend/Subread_Example/Subread_index` but since I need to access the files from the unix computer I need to substitute `Volumes` with `/home/users/allstaff/`
+
+``` r
+library(Rsubread)
+
+setwd(file.path("/home/users/allstaff/quaglieri.a/PHD_project","GEO_Leucegene_data/genomes/Subread_index"))
+# Get FASTQ files name
+fastqdir <- file.path("/home/users/allstaff/quaglieri.a/PHD_project","MiltonMyFriend/example_bamfiles")
+reads1 <- list.files(path = fastqdir,pattern = "1.fastq.gz$",full.names = TRUE)
+reads2 <- gsub("_1","_2",reads1)
+
+# Align
+align(index="hg19_index",readfile1=reads1,readfile2=reads2,nthreads = 10)
+```
+
+### `Subread` threading
+
+-   `Subread` will align the fastq files one after the other one (like a `for` loop)
+
+-   It applies multithreading when aligning the reads within every fastq file
+
+-   Milton will help you to:
+
+-   **Align every fastq file at the same time**
+
+-   Use `Subread` multithreading for every fastq file
+
+The Milton way
+--------------
+
+### Create the `R` scripts, one per sample
+
+``` r
+repo_dir <- "/home/users/allstaff/quaglieri.a/PHD_project"
+
+library(Rsubread)
+
+index_directory <- file.path(repo_dir,"GEO_Leucegene_data/genomes/Subread_index")
+
+# Get FASTQ files name
+fastqdir <- file.path(repo_dir,"MiltonMyFriend/example_bamfiles")
+reads1 <- list.files(path = fastqdir,pattern = "_1.fastq.gz$",full.names = TRUE)
+reads2 <- gsub("_1","_2",reads1)
+
+# Directory where to save the R scripts
+dir.create(file.path(repo_dir,"MiltonMyFriend/Scripts_Subread"),recursive = TRUE,showWarnings = FALSE)
+script_directory <- file.path(repo_dir,"MiltonMyFriend/Scripts_Subread")
+
+# Create scripts, one for every Sample
+for(read in 1:length(reads1)){
+ 
+  read1 <- reads1[read] # get fastq file containing R1
+  read2 <- reads2[read] # get fastq file containing R2
+  sampleName <- basename(gsub("_1.fastq.gz","",read1)) # extract sampleName
+  
+  scriptSample <- file.path(script_directory,paste0(sampleName,"_SubreadAlign.R")) # define script path for sampleName
+  
+  SubreadCall <- paste0("align(index='hg19_index',
+                        readfile1=","'",read1,"'",
+                        ",readfile2=","'",read2,"'",
+                        ",nthreads = 10,",
+                        "output_file=","'",
+                        file.path(dirname(scriptSample),paste0(sampleName,".bam")),"')")
+  
+  cat('library(Rsubread) \n\n',file = scriptSample)
+  
+  cat("setwd('/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data/genomes/Subread_index') \n\n",file = scriptSample,append = TRUE)
+  
+  cat(SubreadCall,file = scriptSample,append = TRUE)
+   
+}
+```
+
+### How an example `_SubreadAlign.R` looks like\*\*
+
+Other scripts will have the exact same structure but with a different file name.
+
+``` r
+library(Rsubread)
+
+setwd("/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data/genomes/Subread_index")
+
+align(index = "hg19_index", readfile1 = "/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/example_bamfiles/SRR1608610_1.fastq.gz", 
+    readfile2 = "/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/example_bamfiles/SRR1608610_2.fastq.gz", 
+    nthreads = 10, output_file = "/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610.bam")
+```
+
+### Create the bash `.sh` scripts, one per sample
+
+Every `.R` scrips needs to be wrapped inside a bash `.sh` script to be queued.
+
+``` bash
+# variable assignment in bash
+scriptdir=/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread
+
+for align_script in ${scriptdir}/*SubreadAlign.R ; do 
+
+  sampleName_tmp=$(basename ${align_script}) # same as basename() in R
+  sampleName=${sampleName_tmp/_SubreadAlign.R/} # same as gsub() in R
+  
+  echo '#!/bin/bash' > ${scriptdir}/${sampleName}_SubreadAlign.sh # echo same as cat() in R
+  echo '#PBS -l nodes=1:ppn=10,mem=32gb' >> ${scriptdir}/${sampleName}_SubreadAlign.sh # >> same as cat(append=TRUE)
+  echo '#PBS -l walltime=04:00:00' >> ${scriptdir}/${sampleName}_SubreadAlign.sh 
+  echo "#PBS -N ${sampleName}" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # Job Name
+  echo "#PBS -o ${scriptdir}/${sampleName}_out" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # std_out name
+  echo "#PBS -e ${scriptdir}/${sampleName}_err" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # std_err name
+  echo '' >> ${scriptdir}/${sampleName}_SubreadAlign.sh
+
+  echo $align_script >> ${scriptdir}/${sampleName}_SubreadAlign.sh
+
+done
+```
+
+### How an example `.sh` script looks like
+
+``` bash
+#!/bin/bash
+#PBS -l nodes=1:ppn=10,mem=32gb
+#PBS -l walltime=04:00:00
+#PBS -N SRR1608610
+#PBS -o /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_out
+#PBS -e /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_err
+
+/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_SubreadAlign.R
+```
