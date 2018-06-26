@@ -1,9 +1,10 @@
-Align fastq files with Subread on Milton
+Submit and monitor your jobs to the queing system
 ================
 Anna Quaglieri
 25/06/2018
 
--   [Fastqc](#fastqc)
+-   [This is what we want!](#this-is-what-we-want)
+-   [Fastqc jobs](#fastqc-jobs)
 -   [Submit the job/s to the queue: `qsub`](#submit-the-jobs-to-the-queue-qsub)
     -   [Combine genomic analysis outputs: `multiqc`](#combine-genomic-analysis-outputs-multiqc)
 -   [Monitor your jobs while their running: `qstat`](#monitor-your-jobs-while-their-running-qstat)
@@ -26,8 +27,13 @@ cd /home/users/allstaff/quaglieri.a/PHD_project/
 git clone git@github.com:annaquaglieri16/MiltonMyFriend.git
 ```
 
-Fastqc
-======
+This is what we want!
+=====================
+
+![](img/script_example.png)
+
+Fastqc jobs
+===========
 
 -   `for` loop
 
@@ -137,7 +143,7 @@ qstat -n1 -u $USER
 
 ![](img/qstat.png)
 
-1.  Go into folder and look for your Job ID: `JobID.torquelord3.hp`
+1.  Go into folder `/stornext/HPCScratch/.torque/spool/` and look for your Job ID: `JobID.torquelord3.hp`
 
 ``` bash
 cd /stornext/HPCScratch/.torque/spool/
