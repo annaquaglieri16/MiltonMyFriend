@@ -12,8 +12,8 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Scared no more:
-## A beginner guide to make Milton <img src="img/Milton.png" /> your friendly collaborator
+# Scared no more: <img src="img/Milton.png" />
+## A beginner guide to make Milton your friendly collaborator
 ### Anna Quaglieri
 ### 2018/06/22
 
@@ -33,7 +33,7 @@ class: center, middle, inverse, title-slide
 
 ---
 
-## Today's talk ![](img/Milton.png)
+## Today's talk 
 
 &lt;br&gt;
 &lt;br&gt;
@@ -62,8 +62,8 @@ class: center, middle, inverse, title-slide
 # Beginning of every script
 # TRUE if running from local, FALSE if running from the server
 local &lt;- TRUE
-mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project",
+                "/home/users/allstaff/quaglieri.a/PHD_project")
 ```
 
 👎 Slow 🐢 or even does not work with very large files
@@ -99,17 +99,30 @@ mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
 
 * [Watch video](https://drive.google.com/file/d/1v3OmRfSk6NLZiIBB0ce74obP6aZsNxkm/view?usp=sharing)!
 
+---
+
+## Message from <i class="fab  fa-r-project "></i> users to IT
+
+&lt;br&gt;
+&lt;br&gt;
+
+* It would be great that when <i class="fab  fa-r-project "></i> is updated on the servers, it is also updated on <i class="fab  fa-r-project "></i> Studio on the servers. 
+
+* The latest <i class="fab  fa-r-project "></i> version should be the default everywhere and if someone needs a previous version will go through the terminal
 
 ---
 
 ## Why did I start using Milton
 
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
 
-* I had to run the same pipeline over and over again across many samples
+* I had to run the same pipeline over and over again across many samples 😐
+
 * I got tired of opening tens of screen sessions on the unix machines to run jobs in "parallel"
 
-
----
+😐-
 
 ### RNA-Seq pipeline: FASTQ files -&gt; Annotated variants
 
@@ -143,98 +156,92 @@ Times!
 
 ![](img/RNADownsRuns.png)
 
+---
+
+## How I use Milton
+
+&lt;br&gt;
+&lt;br&gt;
+
+1. Final structure of `job.sh` to submit with `qsub`
+
+2. How to create an R script for a job (many different ways really!)
+
+3. How to submit the R script to the queue system
+
+4. How to monitor how your job is doing and where it is at
+
+5. Check statistics after job is run to improve your submission
 
 ---
 
-## How to use Milton: Example aligning reads with `Subread`
+## Final structure of job to submit
 
-* We have to align 46 fastq files with `Subread::align()` in R
-* Let's suppose we have created the `Subread` index since that needs to be created once for all!
+Really, you can create it in the way you prefer but the final structure should look like the one below!
 
-
-```r
-local &lt;- TRUE
-mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
-
-library(Rsubread)
-
-# Run Subread in the directory where the index is stored
-setwd(file.path(mydir,"genomes/Subread_index"))
-list.files()
-```
-
-```
-#&gt;  [1] "GRCh38_index.00.b.array" "GRCh38_index.00.b.tab"  
-#&gt;  [3] "GRCh38_index.01.b.array" "GRCh38_index.01.b.tab"  
-#&gt;  [5] "GRCh38_index.02.b.array" "GRCh38_index.02.b.tab"  
-#&gt;  [7] "GRCh38_index.files"      "GRCh38_index.log"       
-#&gt;  [9] "GRCh38_index.reads"      "hg19_index.00.b.array"  
-#&gt; [11] "hg19_index.00.b.tab"     "hg19_index.01.b.array"  
-#&gt; [13] "hg19_index.01.b.tab"     "hg19_index.02.b.array"  
-#&gt; [15] "hg19_index.02.b.tab"     "hg19_index.files"       
-#&gt; [17] "hg19_index.log"          "hg19_index.reads"
-```
+![](img/script_example.png)
 
 ---
 
-### Run `Subread` on a terminal screen session
-
-* Start terminal screen session
+&lt;br&gt;
+&lt;br&gt;
 
 
 ```bash
-ssh unix308
-screen
-module load R
-R
+ssh unix500
+
+qsub ScriptToSubmit.sh
 ```
 
-* Run `Subread`
+![](img/example_job_running.png)
 
+* `NDS` = `nodes=1`
 
-```r
-local &lt;- FALSE
-mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+* `TSK` = `ppn=4`
 
-library(Rsubread)
+* `Req'd memory` = `mem=4gb`
 
-setwd(file.path(mydir,"genomes/Subread_index"))
+* `Req'd time` = `walltime=hh:mm:ss` see [here](http://catalyst.wehi.edu.au/research/computationalbiology/Pages/walltimes.aspx) fore info about walltime 
 
-# Get FASTQ files name
-fastqdir &lt;- "/wehisan/general/user_managed/grpu_majewski_3/quaglieri.a/GEO_Leucegene_data/sra_cbf_aml/fastq_20M_100"
-reads1 &lt;- list.files(path = fastqdir,pattern = "R1.fastq.gz$")
-reads2 &lt;- gsub("R1","R2",reads1)
-
-# Align
-align(index="hg19_index",readfile1=reads1,readfile2=reads2,phredOffset=64,nthreads = 10)
-```
+Find more information on the Milton page on [Catalyst](http://catalyst.wehi.edu.au/research/computationalbiology/Pages/Quick-Start-Guide-to-using-the-HPC.aspx)
 
 
 ---
 
-### `Subread` threading
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
 
-* `Subread` will align the fastq files one after the other one (like a `for` loop)
+Check example script `AlignWithSubread.Rmd` on  
 
-* It applies multithreading when aligning the reads within every fastq file
+<i class="fab  fa-github "></i> https://github.com/annaquaglieri16/MiltonMyFriend
 
-* Milton will help you to:
 
-  * **Align every fasq files at the same time**
-  
-  * Use `Subread` multithreading for every fastq file
-  
+```bash
+git clone https://github.com/annaquaglieri16/MiltonMyFriend
+```
 
 ---
 
-## Create
+## Summary of key commands that you want to keep in mind
+
+* **Submit a job**: `qsub` (see slide above for `#PBS` specifications)
+
+* **Check running jobs**: `qstat -n1 -u $USER`
+
+* `ssh trqn-###` : ssh into a computer (node) where you can use `top` to monitor your job
+
+* `cd /stornext/HPCScratch/.torque/spool/` to check `stdout` and `stderr` of running jobs. Use `Jobid` to find a specific job
+
+* **Delete a job already submitted**: `qdel jobid`  (JOBID.torquelord3.hps0080)
+
+* `module load its-tools` and `torquestats -u $USER -p` to monitor usage of past jobs
     </textarea>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
 "highlightStyle": "github",
 "highlightLines": true,
+"toc": true,
 "countIncrementalSlides": false
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {

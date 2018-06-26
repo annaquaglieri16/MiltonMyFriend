@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+./Subread_Example/Subread_index/hg19_index*
+./Subread_Example/Subread_index/example_bamfiles/*

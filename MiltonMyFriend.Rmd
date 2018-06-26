@@ -1,6 +1,6 @@
 ---
-title: "Scared no more:"
-subtitle: "A beginner guide to make Milton ![](img/Milton.png) your friendly collaborator"
+title: "Scared no more: ![](img/Milton.png)"
+subtitle: "A beginner guide to make Milton your friendly collaborator"
 author: "Anna Quaglieri"
 date: "2018/06/22"
 output:
@@ -9,6 +9,7 @@ output:
     nature:
       highlightStyle: github
       highlightLines: true
+      toc: true
       countIncrementalSlides: false
     
 ---
@@ -36,7 +37,7 @@ opts_chunk$set(
 
 ---
 
-## Today's talk ![](img/Milton.png)
+## Today's talk 
 
 <br>
 <br>
@@ -64,8 +65,8 @@ opts_chunk$set(
 # Beginning of every script
 # TRUE if running from local, FALSE if running from the server
 local <- TRUE
-mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project",
+                "/home/users/allstaff/quaglieri.a/PHD_project")
 
 ```
 
@@ -100,19 +101,29 @@ mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
  
 * You can run analyses directly from it like a normal unix terminal, you can open screen sessions and you can also submit jobs on torquelord with `qsub`
 
-* [Watch video](https://drive.google.com/file/d/1v3OmRfSk6NLZiIBB0ce74obP6aZsNxkm/view?usp=sharing)!
+---
 
+## Message from `r icon::fa_r_project()` users to IT
+
+<br>
+<br>
+
+* It would be great that when `r icon::fa_r_project()` is updated on the servers, it is also updated on `r icon::fa_r_project()` Studio on the servers. 
+
+* The latest `r icon::fa_r_project()` version should be the default everywhere and if someone needs a previous version will go through the terminal
 
 ---
 
 ## Why did I start using Milton
 
+<br>
+<br>
+<br>
 
 * I had to run the same pipeline over and over again across many samples
 * I got tired of opening tens of screen sessions on the unix machines to run jobs in "parallel"
 
-
----
+😐-
 
 ### RNA-Seq pipeline: FASTQ files -> Annotated variants
 
@@ -141,193 +152,85 @@ Times!
 
 ![](img/RNADownsRuns.png)
 
+---
+
+## How I use Milton
+
+<br>
+<br>
+
+1. Final structure of `job.sh` to submit with `qsub`
+
+2. How to create an R script for a job (many different ways really!)
+
+3. How to submit the R script to the queue system
+
+4. How to monitor how your job is doing and where it is at
+
+5. Check statistics after job is run to improve your submission
 
 ---
 
-## How to use Milton: Example aligning reads with `Subread`
+## Final structure of job to submit
 
-* We have to align 46 fastq files with `Subread::align()` in R
-* Let's suppose we have created the `Subread` index since that needs to be created once for all!
+Really, you can create it in the way you prefer but the final structure should look like the one below!
 
-```{r}
-local <- TRUE
-mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
-
-library(Rsubread)
-
-# Run Subread in the directory where the index is stored
-setwd(file.path(mydir,"genomes/Subread_index"))
-list.files()
-```
+![](img/script_example.png)
 
 ---
 
-### Run `Subread` on a terminal screen session
-
-* Start terminal screen session
+<br>
+<br>
 
 ```{bash eval=FALSE}
-ssh unix308
-screen
-module load R
-R
+ssh unix500
+
+qsub ScriptToSubmit.sh
 ```
 
-* Run `Subread` from R
+![](img/example_job_running.png)
 
-```{r eval=FALSE}
-local <- FALSE
-mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
+* `NDS` = `nodes=1`
 
-library(Rsubread)
+* `TSK` = `ppn=4`
 
-setwd(file.path(mydir,"genomes/Subread_index"))
+* `Req'd memory` = `mem=4gb`
 
-# Get FASTQ files name
-fastqdir <- "/wehisan/general/user_managed/grpu_majewski_3/quaglieri.a/GEO_Leucegene_data/sra_cbf_aml/fastq_20M_100"
-reads1 <- list.files(path = fastqdir,pattern = "R1.fastq.gz$")
-reads2 <- gsub("R1","R2",reads1)
+* `Req'd time` = `walltime=hh:mm:ss` see [here](http://catalyst.wehi.edu.au/research/computationalbiology/Pages/walltimes.aspx) fore info about walltime 
 
-# Align
-align(index="hg19_index",readfile1=reads1,readfile2=reads2,phredOffset=64,nthreads = 10)
-```
-
----
-
-### `Subread` threading
-
-* `Subread` will align the fastq files one after the other one (like a `for` loop)
-
-* It applies multithreading when aligning the reads within every fastq file
-
-* Milton will help you to:
-
-  * **Align every fasq files at the same time**
-  
-  * Use `Subread` multithreading for every fastq file
-  
-
----
-
-## Align 46 bamfiles with `Subread` using Milton
-
-### Step 1: Create the R scripts, one per sample
-
-```{r}
-local <- FALSE
-mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project/GEO_Leucegene_data",
-                "/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data")
-
-library(Rsubread)
-
-setwd(file.path(mydir,"genomes/Subread_index"))
-
-# Get FASTQ files name
-fastqdir <- "/wehisan/general/user_managed/grpu_majewski_3/quaglieri.a/GEO_Leucegene_data/sra_cbf_aml/fastq_20M_100"
-reads1 <- list.files(path = fastqdir,pattern = "R1.fastq.gz$",full.names = TRUE)
-reads2 <- gsub("R1","R2",reads1)
-
-dir.create("/wehisan/general/user_managed/grpu_majewski_3/Talks/MiltonUG/MiltonMyFriend/Scripts_Subread",recursive = TRUE,showWarnings = FALSE)
-script_directory <- "/wehisan/general/user_managed/grpu_majewski_3/Talks/MiltonUG/MiltonMyFriend/Scripts_Subread"
-
-# Create scripts, one for every Sample
-for(read in 1:length(reads1)){
- 
-  read1 <- reads1[read] # get fastq file containing R1
-  read2 <- reads2[read] # get fastq file containing R1
-  sampleName <- basename(gsub("R1.fastq.gz","",read1)) # extract sampleName
-  
-  scriptSample <- file.path(script_directory,paste0(sampleName,"SubreadAlign.R")) # define script path for sampleName
-  
-  SubreadCall <- paste0("align(index='hg19_index',
-                        readfile1=","'",read1,"'",
-                        ",readfile2=","'",read2,"'",
-                        ",nthreads = 10")
-  
-  cat('library(Rsubread) \n\n',file = scriptSample)
-  
-  cat("setwd('/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data/genomes/Subread_index') \n\n",file = scriptSample,append = TRUE)
-  
-  cat(SubreadCall,file = scriptSample,append = TRUE)
-   
-}
-
-```
+Find more information on the Milton page on [Catalyst](http://catalyst.wehi.edu.au/research/computationalbiology/Pages/Quick-Start-Guide-to-using-the-HPC.aspx)
 
 
 ---
 
-### How `SRX959064_SubreadAlign.R` looks like
+<br>
+<br>
+<br>
 
-```{r eval=FALSE}
-library(Rsubread)
+Check example script `AlignWithSubread.Rmd` on  
 
-setwd('/home/users/allstaff/quaglieri.a/PHD_project/GEO_Leucegene_data/genomes/Subread_index')
-
-align(index='hg19_index',
-                        readfile1='/wehisan/general/user_managed/grpu_majewski_3/quaglieri.a/GEO_Leucegene_data/sra_cbf_aml/fastq_20M_100/SRX959064_R1.fastq
-.gz',readfile2='/wehisan/general/user_managed/grpu_majewski_3/quaglieri.a/GEO_Leucegene_data/sra_cbf_aml/fastq_20M_100/SRX959064_R2.fastq.gz',nthreads = 10
-```
-
-
----
-
-### Step 2: Create the bash `.sh` scripts, one per sample
-
-#### Directly from `unix500`
-
-* `#!/bin/bash` starts every `bash` script
-* `#PBS -l nodes=1:ppn=10,mem=32gb` to request:
-  * `nodes` = computer. Generally always 1. 
-  * `ppn` = `nthreads` in `Rsubread::align()`
-  * `mem` memory needed, not always clear how much is needed! But there are some trickes for it.
+`r icon::fa_github()` https://github.com/annaquaglieri16/MiltonMyFriend
 
 ```{bash eval=FALSE}
-# variable assignment in bash
-scriptdir=/wehisan/general/user_managed/grpu_majewski_3/Talks/MiltonUG/MiltonMyFriend/Scripts_Subread
-
-for align_script in ${scriptdir}/*SubreadAlign.R ; do 
-
-  sampleName_tmp=$(basename ${align_script}) # same as basename() in R
-  sampleName=${sampleName_tmp/_SubreadAlign.R/} # same as gsub() in R
-  
-  echo '#!/bin/bash' > ${scriptdir}/${sampleName}_SubreadAlign.sh # echo same as cat() in R
-  echo '#PBS -l nodes=1:ppn=10,mem=32gb' >> ${scriptdir}/${sampleName}_SubreadAlign.sh # >> same as cat(append=TRUE)
-  echo "#PBS -N ${sampleName}" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # Job Name
-  echo "#PBS -o ${sampleName}_out" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # std_out name
-  echo "#PBS -e ${sampleName}_err" >> ${scriptdir}/${sampleName}_SubreadAlign.sh # std_err name
-  echo '' >> ${scriptdir}/${sampleName}_SubreadAlign.sh
-
-  echo $align_script >> ${scriptdir}/${sampleName}_SubreadAlign.sh
-
-done
-
+git clone https://github.com/annaquaglieri16/MiltonMyFriend
 ```
-
 
 ---
 
-### How `SRX959064_SubreadAlign.sh` looks like
+## Summary of key commands that you want to keep in mind
 
-```{bash eval=FALSE}
-#!/bin/bash
-#PBS -l nodes=1:ppn=10,mem=32gb
-#PBS -N SRX959064
-#PBS -o SRX959064_out
-#PBS -e SRX959064_err
+* **Submit a job**: `qsub` (see slide above for `#PBS` specifications)
 
-/wehisan/general/user_managed/grpu_majewski_3/Talks/MiltonUG/MiltonMyFriend/Scripts_Subread/SRX959064_SubreadAlign.R
-```
+* **Check running jobs**: `qstat -n1 -u $USER`
 
+* `ssh trqn-###` : ssh into a computer (node) where you can use `top` to monitor your job
 
---- 
+* `cd /stornext/HPCScratch/.torque/spool/` to check `stdout` and `stderr` of running jobs. Use `Jobid` to find a specific job
 
-### Submit the job/s
+* **Delete a job already submitted**: `qdel jobid`  (JOBID.torquelord3.hps0080)
+
+* `module load its-tools` and `torquestats -u $USER -p` to monitor usage of past jobs
 
 
-```{r}
 
-```
 
