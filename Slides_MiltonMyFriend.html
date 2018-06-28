@@ -4,7 +4,7 @@
     <title>Scared no more:</title>
     <meta charset="utf-8">
     <meta name="author" content="Anna Quaglieri" />
-    <link href="MiltonMyFriend_files/font-awesome/css/fontawesome-all.min.css" rel="stylesheet" />
+    <link href="Slides_MiltonMyFriend_files/font-awesome/css/fontawesome-all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="default.css" type="text/css" />
     <link rel="stylesheet" href="MUG-fonts.css" type="text/css" />
   </head>
@@ -97,8 +97,6 @@ mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project",
  
 * You can run analyses directly from it like a normal unix terminal, you can open screen sessions and you can also submit jobs on torquelord with `qsub`
 
-* [Watch video](https://drive.google.com/file/d/1v3OmRfSk6NLZiIBB0ce74obP6aZsNxkm/view?usp=sharing)!
-
 ---
 
 ## Message from <i class="fab  fa-r-project "></i> users to IT
@@ -118,11 +116,11 @@ mydir &lt;- ifelse(local,"/Volumes/quaglieri.a/PHD_project",
 &lt;br&gt;
 &lt;br&gt;
 
-* I had to run the same pipeline over and over again across many samples 😐
+* I had to run the same pipeline over and over again across many samples
 
 * I got tired of opening tens of screen sessions on the unix machines to run jobs in "parallel"
 
-😐-
+---
 
 ### RNA-Seq pipeline: FASTQ files -&gt; Annotated variants
 
@@ -235,7 +233,14 @@ git clone https://github.com/annaquaglieri16/MiltonMyFriend
 
 * **Delete a job already submitted**: `qdel jobid`  (JOBID.torquelord3.hps0080)
 
-* `module load its-tools` and `torquestats -u $USER -p` to monitor usage of past jobs
+* `module load its-tools` and `torquestats -u $USER -p` to monitor usage of past jobs and find all your saved `.csv` stats here `/stornext/System/data/torque_data/`
+
+
+---
+
+# Thanks to Helpdesk!
+
+![](img/helpdesk.png)
     </textarea>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({

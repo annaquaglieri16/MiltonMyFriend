@@ -121,9 +121,10 @@ mydir <- ifelse(local,"/Volumes/quaglieri.a/PHD_project",
 <br>
 
 * I had to run the same pipeline over and over again across many samples
+
 * I got tired of opening tens of screen sessions on the unix machines to run jobs in "parallel"
 
-😐-
+---
 
 ### RNA-Seq pipeline: FASTQ files -> Annotated variants
 
@@ -229,8 +230,12 @@ git clone https://github.com/annaquaglieri16/MiltonMyFriend
 
 * **Delete a job already submitted**: `qdel jobid`  (JOBID.torquelord3.hps0080)
 
-* `module load its-tools` and `torquestats -u $USER -p` to monitor usage of past jobs
+* `module load its-tools` and `torquestats -u $USER -p` to monitor usage of past jobs and find all your saved `.csv` stats here `/stornext/System/data/torque_data/`
 
 
+---
 
+# Thanks to Helpdesk!
+
+![](img/helpdesk.png)
 
