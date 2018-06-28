@@ -22,6 +22,7 @@ Anna Quaglieri
 
 ``` bash
 
+# To be changed to your own directory
 cd /home/users/allstaff/quaglieri.a/PHD_project/
 
 git clone git@github.com:annaquaglieri16/MiltonMyFriend.git
