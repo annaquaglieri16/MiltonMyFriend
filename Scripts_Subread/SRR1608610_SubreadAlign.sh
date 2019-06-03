@@ -5,4 +5,6 @@
 #PBS -o /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_out
 #PBS -e /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_err
 
-/home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_SubreadAlign.R
+module load R
+
+Rscript /home/users/allstaff/quaglieri.a/PHD_project/MiltonMyFriend/Scripts_Subread/SRR1608610_SubreadAlign.R
